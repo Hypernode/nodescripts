@@ -1,12 +1,17 @@
-import logging
 import smtplib
 from email.mime.text import MIMEText
-from smtplib import SMTPSenderRefused, SMTPRecipientsRefused, SMTPDataError
+from smtplib import SMTPSenderRefused, SMTPRecipientsRefused, SMTPDataError, SMTPException
 import re
+import socket
 
 
 def send_mail(smtphost="localhost", smtpport="25", recipient="recipient@hypernode.com", sender="sender@hypernode.com", subject="testsubject", body="testbody"):
-    smtp = smtplib.SMTP(smtphost, smtpport)
+
+    try:
+        smtp = smtplib.SMTP(smtphost, smtpport)
+    except socket.error as e:
+        raise SMTPException("Could not connect to mailserver at %s:%s: %s" % (smtphost, smtpport, e))
+
     msg = compose_mail(recipient, sender, subject, body)
 
     """
@@ -43,8 +48,20 @@ def send_mail(smtphost="localhost", smtpport="25", recipient="recipient@hypernod
     return match.group('queueid')
 
 
-def compose_mail(recipient, sender, subject, body):
+def check_delivery(messageid, loglines):
+    if messageid is None:
+        raise ValueError("specify a message id")
 
+    matcher = re.compile("%s: .* queued as [0-9A-F]+\)$" % messageid)
+
+    for line in loglines:
+        if matcher.search(line):
+            return True
+
+    return False
+
+
+def compose_mail(recipient, sender, subject, body):
     if recipient is None:
         raise ValueError("recipient cannot be None")
 

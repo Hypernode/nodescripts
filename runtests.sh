@@ -27,6 +27,7 @@ if [ "$1" = "--jenkins" ]; then
 	./pep8.sh
 else
 	watch -n 0.1 -c -- "
+		find . -type f -name '*.pyc' -delete;
 		nosetests --with-yanc --yanc-color=on $*;
 		./pep8.sh"
 fi

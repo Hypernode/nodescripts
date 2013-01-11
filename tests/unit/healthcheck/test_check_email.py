@@ -1,5 +1,5 @@
 from healthcheck.test import TestCase
-from healthcheck.mailout import send_mail, compose_mail
+from healthcheck.mailout import send_mail, compose_mail, check_delivery
 from smtplib import SMTPConnectError, SMTPSenderRefused, SMTPRecipientsRefused, SMTPDataError
 import mock
 
@@ -64,6 +64,32 @@ class TestSendmail(TestCase):
     def test_send_mail_returns_queue_id(self):
         queueid = send_mail(**self.send_mail_arguments)
         self.assertEqual(queueid, "8E220500567")
+
+
+class TestCheckDelivery(TestCase):
+
+    def setUp(self):
+        self.sample_log = ("\n"
+                           "Jan 11 10:39:13 allard postfix/smtpd[2087]: connect from localhost[127.0.0.1]\n"
+                           "Jan 11 10:39:13 allard postfix/smtpd[2087]: E8313500567: client=localhost[127.0.0.1]\n"
+                           "Jan 11 10:39:13 allard postfix/cleanup[2091]: E8313500567: message-id=<20130111093913.E8313500567@allard-desktop.r139.net>\n"
+                           "Jan 11 10:39:14 allard postfix/qmgr[27566]: E8313500567: from=<testsender@hypernode.com>, size=351, nrcpt=1 (queue active)\n"
+                           "Jan 11 10:39:14 allard postfix/smtpd[2087]: disconnect from localhost[127.0.0.1]\n"
+                           "Jan 11 10:39:14 allard postfix/smtp[2100]: E8313500567: to=<testrecipient@hypernode.com>, relay=smtp.hypernode.com[82.94.214.140]:2525, delay=0.16, delays=0.09/0/0.05/0.01, dsn=2.0.0, status=sent (250 2.0.0 Ok: queued as 18E578E802)\n"
+                           "Jan 11 10:39:14 allard postfix/qmgr[27566]: E8313500567: removed\n"
+                           )
+
+    def test_check_delivery_croaks_if_no_messageid(self):
+        with self.assertRaises(ValueError):
+            check_delivery(None, [])
+
+    def test_check_delivery_returns_false_when_no_lines_match(self):
+        self.assertFalse(check_delivery("E8313500567", []))
+        self.assertFalse(check_delivery("E8313500567", ["asdadsf"]))
+
+    def test_check_delivery_returns_true_when_delivery_is_seen(self):
+        self.assertTrue(check_delivery("E8313500567", self.sample_log.split("\n")))
+        pass
 
 
 class TestComposeMail(TestCase):
