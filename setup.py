@@ -1,7 +1,7 @@
 from distutils.core import setup
 
 setup(
-    name='hypernode-system',
+    name='hypernode-nodescripts',
     version='0.1',
     packages=['hypernode.healthcheck'],
     scripts=['bin/check_mailout'],
