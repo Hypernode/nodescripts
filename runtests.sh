@@ -8,7 +8,6 @@ if [ -z "$VIRTUAL_ENV" ]; then
 		. ../bin/activate
 	else 
 		echo "Please activate your environment first!"
-		exit 1
 	fi
 fi
 
@@ -20,15 +19,15 @@ fi
 
 realpath=$(realpath $0)
 projectpath=$(dirname "$realpath")
+bootstrappath="$projectpath/modules/bootstrap/files/usr/lib/hypernode/"
 
 export PYTHONPATH="$PYTHONPATH:$bootstrappath"
 
 if [ "$1" = "--jenkins" ]; then
-	nosetests --with-xunit;
+	nosetests --with-xunit --with-xcoverage --cover-erase --cover-package=hypernode;
 	./pep8.sh
 else
-	watch -n 2 -c -- "
-		find . -type f -name '*.pyc' -delete;
-		nosetests --with-yanc --yanc-color=on $*;
+	watch -n 0.1 -c -- "
+		nosetests --with-yanc --yanc-color=on --with-xcoverage --cover-erase --cover-package=hypernode $*;
 		./pep8.sh"
 fi
