@@ -1,5 +1,5 @@
-from healthcheck.test import TestCase
-from healthcheck.mailout import send_mail, compose_mail, check_delivery
+from hypernode.healthcheck.test import TestCase
+from hypernode.healthcheck.mailout import send_mail, compose_mail, check_delivery
 from smtplib import SMTPConnectError, SMTPSenderRefused, SMTPRecipientsRefused, SMTPDataError
 import mock
 
@@ -54,7 +54,7 @@ class TestSendmail(TestCase):
             send_mail(**self.send_mail_arguments)
 
     def test_send_mail_composes_email(self):
-        compose, p = self.set_up_patch("healthcheck.mailout.compose_mail")
+        compose, p = self.set_up_patch("hypernode.healthcheck.mailout.compose_mail")
         send_mail(**self.send_mail_arguments)
         compose.assert_called_once_with(self.send_mail_arguments["recipient"],
                                         self.send_mail_arguments["sender"],

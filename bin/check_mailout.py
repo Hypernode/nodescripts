@@ -2,10 +2,10 @@
 
 import sys
 import os
-import healthcheck.log
-import healthcheck.mailout as mailout
+import hypernode.healthcheck.log
+import hypernode.healthcheck.mailout as mailout
 import time
-from healthcheck.mailout import SMTPException
+from hypernode.healthcheck.mailout import SMTPException
 
 recipient = "testrecipient@hypernode.com"
 sender = "testsender@hypernode.com"
@@ -30,7 +30,7 @@ See if the mail is delivered
         Give the error in the callback
 """
 
-logger = healthcheck.log.getLogger("healthcheck.mailout")
+logger = hypernode.healthcheck.log.getLogger("hypernode.healthcheck.mailout")
 
 with open("/var/log/mail.log") as maillog:
     # First, seek to the end of the file, so we get only new entries.
@@ -67,5 +67,3 @@ with open("/var/log/mail.log") as maillog:
             logger.critical("Mail was not sent!")
             # TODO: callback
             sys.exit(1)
-
-

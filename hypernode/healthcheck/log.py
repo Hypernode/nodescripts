@@ -3,7 +3,7 @@ import logging
 import sys
 
 
-def getLogger(name="healthcheck"):
+def getLogger(name="hypernode.healthcheck"):
     formatter = logging.Formatter("%(asctime)s - %(name)-20s - %(levelname)-7s   %(message)s")
     logger = logging.getLogger(name)
     logger.setLevel(logging.DEBUG)
