@@ -4,7 +4,7 @@ import logging.handlers
 import sys
 
 
-def getLogger(name="nodeconfig"):
+def getLogger(name="hypernode.nodeconfig"):
     logger = logging.getLogger(name)
     logger.setLevel(logging.DEBUG)
 

@@ -3,7 +3,7 @@
 import hashlib
 import json
 import requests
-import nodeconfig
+import hypernode.nodeconfig
 from hypernode.nodeconfig import common
 
 
@@ -12,7 +12,7 @@ class CallbackException(Exception):  # pragma: no cover
 
 
 def call_success(config):
-    logger = nodeconfig.getLogger(__name__)
+    logger = hypernode.nodeconfig.getLogger(__name__)
 
     common.check_vars(config, ["callback_url", "app_name"])
     hash = hash_deployment_config(config)
@@ -32,7 +32,7 @@ def call_success(config):
 
 
 def call_error(config, module, exception, log):
-    logger = nodeconfig.getLogger(__name__)
+    logger = hypernode.nodeconfig.getLogger(__name__)
 
     common.check_vars(config, ["callback_url", "app_name"])
     hash = hash_deployment_config(config)
