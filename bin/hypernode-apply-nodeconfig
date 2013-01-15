@@ -1,0 +1,74 @@
+#!/usr/bin/env python
+
+import sys
+import os.path
+
+pathprefix = os.path.normpath(os.path.dirname(__file__))
+pathprefix = os.path.realpath(pathprefix + "/../lib/hypernode")
+sys.path.append(pathprefix)
+
+# General inclusions
+import nodeconfig
+import nodeconfig.callback
+import nodeconfig.common
+
+# Parts
+import nodeconfig.hostname
+import nodeconfig.phpini
+import nodeconfig.pubkeys
+import nodeconfig.sslcerts
+import nodeconfig.virtualhostname
+
+##
+# Configuration
+##
+runparts = [nodeconfig.hostname, nodeconfig.phpini, nodeconfig.pubkeys, nodeconfig.sslcerts, nodeconfig.virtualhostname]
+nodeconfigpath = "/etc/hypernode/nodeconfig.json"
+
+##
+# Logging
+##
+logger = nodeconfig.getLogger()
+logbuffer = nodeconfig.attachBufferHandler(logger)
+
+if sys.stdout.isatty():
+    nodeconfig.attachConsoleHandler(logger)
+else:
+    nodeconfig.attachSyslogHandler(logger)
+
+###
+# Fetch nodeconfig
+###
+logger.info("Applying nodeconfig to node")
+
+try:
+    logger.debug("Fetching nodeconfig from %s" % nodeconfigpath)
+    config = nodeconfig.common.get_config(nodeconfigpath)
+except Exception as e:
+    logger.critical("Could not open nodeconfig in %s" % nodeconfigpath)
+    logger.critical(e)
+    sys.exit(1)
+
+###
+# Run the parts
+###
+for module in runparts:
+    try:
+        module.apply_config(config)
+    except Exception as e:
+        modulelogger = nodeconfig.getLogger(module.__name__)
+        modulelogger.error("Could not execute part %s" % module.__name__)
+        modulelogger.error(e.message)
+        try:
+            nodeconfig.callback.call_error(config, module, e, logbuffer.formatBuffer())
+        except Exception as e:
+            logger.error("Could not perform error callback to control")
+            logger.error(e)
+        sys.exit(1)
+
+try:
+    nodeconfig.callback.call_success(config)
+except Exception as e:
+    logger.error("Could not perform success callback to control")
+    logger.error(e)
+    sys.exit(1)
