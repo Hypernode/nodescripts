@@ -2,3 +2,6 @@ mock==1.0.1
 nose==1.2.1
 pep8==1.4
 nosexcover==1.0.7
+-e git+git@github.com:Hypernode/yanc.git#egg=yanc
+requests==0.14.2
+django==1.4.2
