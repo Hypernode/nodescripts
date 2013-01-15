@@ -3,8 +3,8 @@ from distutils.core import setup
 setup(
     name='hypernode-nodescripts',
     version='0.1',
-    packages=['hypernode.healthcheck'],
-    scripts=['bin/check_mailout'],
+    packages=['hypernode', 'hypernode.healthcheck', 'hypernode.nodeconfig'],
+    scripts=['bin/check_mailout', 'bin/hypernode-apply-nodeconfig'],
     url='https://github.com/hypernode/nodescripts.git',
     license='',
     author='Allard Hoeve',
