@@ -4,7 +4,7 @@ from smtplib import SMTPSenderRefused, SMTPRecipientsRefused, SMTPDataError, SMT
 import re
 import socket
 import requests
-import json
+import hypernode.nodeconfig.common
 
 
 def send_mail(smtphost="localhost", smtpport="25", recipient="recipient@hypernode.com", sender="sender@hypernode.com", subject="testsubject", body="testbody"):
@@ -86,7 +86,7 @@ def compose_mail(recipient, sender, subject, body):
 
 
 def raise_sos(message=""):
-    config = get_deployment_config()
+    config = hypernode.nodeconfig.common.get_config("/etc/hypernode/nodeconfig.json")
     data = {'message': message}
     resp = requests.post(config["sos_url"], data=data)
 
@@ -94,15 +94,3 @@ def raise_sos(message=""):
         return True
 
     return False
-
-
-# Copied from nodeconfig.common.get_config. No tests, waiting for
-# shared code
-def get_deployment_config():
-    filename = "/etc/hypernode/nodeconfig.json"
-    with open(filename, 'r') as fd:
-        content = fd.read()
-        try:
-            return json.loads(content)
-        except ValueError:
-            return {}

@@ -110,7 +110,7 @@ class TestComposeMail(TestCase):
 class TestRaiseSOS(TestCase):
 
     def test_raise_sos_posts_to_callback_url(self):
-        get_deployment_config = self.set_up_patch('hypernode.healthcheck.mailout.get_deployment_config')
+        get_deployment_config = self.set_up_patch('hypernode.nodeconfig.common.get_config')
         get_deployment_config.return_value = {'sos_url': 'my_url'}
 
         mock_post = self.set_up_patch('requests.post')
@@ -122,13 +122,13 @@ class TestRaiseSOS(TestCase):
         mock_post.assert_called_once_with('my_url', data=data)
 
     def test_raise_sos_raises_keyerror_if_sos_url_not_found(self):
-        get_deployment_config = self.set_up_patch('hypernode.healthcheck.mailout.get_deployment_config')
+        get_deployment_config = self.set_up_patch('hypernode.nodeconfig.common.get_config')
         get_deployment_config.return_value = {'noop': 'my_url'}
 
         self.assertRaises(KeyError, raise_sos, "Help!")
 
     def test_raise_sos_returns_true_if_status_code_200(self):
-        get_deployment_config = self.set_up_patch('hypernode.healthcheck.mailout.get_deployment_config')
+        get_deployment_config = self.set_up_patch('hypernode.nodeconfig.common.get_config')
         get_deployment_config.return_value = {'sos_url': 'my_url'}
 
         mock_post = self.set_up_patch('requests.post')
@@ -139,7 +139,7 @@ class TestRaiseSOS(TestCase):
         self.assertTrue(ret)
 
     def test_raise_sos_returns_false_if_status_code_not_200(self):
-        get_deployment_config = self.set_up_patch('hypernode.healthcheck.mailout.get_deployment_config')
+        get_deployment_config = self.set_up_patch('hypernode.nodeconfig.common.get_config')
         get_deployment_config.return_value = {'sos_url': 'my_url'}
 
         mock_post = self.set_up_patch('requests.post')
