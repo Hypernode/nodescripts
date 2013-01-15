@@ -66,7 +66,7 @@ with open("/var/log/mail.log") as maillog:
         else:
             logger.critical("Mail was not sent, notifying staff!")
             if mailout.raise_sos(message="There seems to be a problem with maildelivery on this instance"):
-                logger.critical("Could not send a notification to staff!")
-            else:
                 logger.info("Successfully notified staff")
+            else:
+                logger.critical("Could not send a notification to staff!")
             sys.exit(1)
