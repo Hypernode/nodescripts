@@ -1,5 +1,5 @@
 from hypernode.healthcheck.test import TestCase
-from hypernode.healthcheck.mailout import send_mail, compose_mail, check_delivery
+from hypernode.healthcheck.mailout import send_mail, compose_mail, check_delivery, raise_sos
 from smtplib import SMTPConnectError, SMTPSenderRefused, SMTPRecipientsRefused, SMTPDataError
 import mock
 
@@ -12,7 +12,7 @@ class TestSendmail(TestCase):
         self.mock_smtp.rcpt.return_value = (250, "OK")
         self.mock_smtp.data.return_value = (250, "2.0.0 Ok: queued as 8E220500567")
 
-        self.msc, self.msp = self.set_up_patch('smtplib.SMTP')
+        self.msc = self.set_up_patch('smtplib.SMTP')
         self.msc.return_value = self.mock_smtp
 
         self.send_mail_arguments = {"smtphost": "localhost",
@@ -54,7 +54,7 @@ class TestSendmail(TestCase):
             send_mail(**self.send_mail_arguments)
 
     def test_send_mail_composes_email(self):
-        compose, p = self.set_up_patch("hypernode.healthcheck.mailout.compose_mail")
+        compose = self.set_up_patch("hypernode.healthcheck.mailout.compose_mail")
         send_mail(**self.send_mail_arguments)
         compose.assert_called_once_with(self.send_mail_arguments["recipient"],
                                         self.send_mail_arguments["sender"],
@@ -105,3 +105,45 @@ class TestComposeMail(TestCase):
         self.assertEquals(msg["Subject"], "subject")
         self.assertEquals(msg["From"], "sender")
         self.assertEquals(msg["To"], "recipient")
+
+
+class TestRaiseSOS(TestCase):
+
+    def test_raise_sos_posts_to_callback_url(self):
+        get_deployment_config = self.set_up_patch('hypernode.healthcheck.mailout.get_deployment_config')
+        get_deployment_config.return_value = {'sos_url': 'my_url'}
+
+        mock_post = self.set_up_patch('requests.post')
+        data = {'message': "Help!"}
+
+        ret = raise_sos("Help!")
+
+        assert get_deployment_config.called
+        mock_post.assert_called_once_with('my_url', data=data)
+
+    def test_raise_sos_returns_true_if_status_code_200(self):
+        get_deployment_config = self.set_up_patch('hypernode.healthcheck.mailout.get_deployment_config')
+        get_deployment_config.return_value = {'sos_url': 'my_url'}
+
+        mock_post = self.set_up_patch('requests.post')
+        mock_post.return_value.status_code = 200
+
+        ret = raise_sos("Help!")
+
+        self.assertTrue(ret)
+
+    def test_raise_sos_returns_false_if_status_code_not_200(self):
+        get_deployment_config = self.set_up_patch('hypernode.healthcheck.mailout.get_deployment_config')
+        get_deployment_config.return_value = {'sos_url': 'my_url'}
+
+        mock_post = self.set_up_patch('requests.post')
+        mock_post.return_value.status_code = 403
+
+        ret = raise_sos("Help!")
+
+        self.assertFalse(ret)
+
+
+class TestGetDeploymentConfig(TestCase):
+
+    pass

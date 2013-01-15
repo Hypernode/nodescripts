@@ -64,6 +64,9 @@ with open("/var/log/mail.log") as maillog:
             logger.debug("Skip current check.")
             sys.exit(0)
         else:
-            logger.critical("Mail was not sent!")
-            # TODO: callback
+            logger.critical("Mail was not sent, notifying staff!")
+            if mailout.raise_sos(message="There seems to be a problem with maildelivery on this instance"):
+                logger.critical("Could not send a notification to staff!")
+            else:
+                logger.info("Successfully notified staff")
             sys.exit(1)

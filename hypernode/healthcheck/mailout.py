@@ -3,6 +3,7 @@ from email.mime.text import MIMEText
 from smtplib import SMTPSenderRefused, SMTPRecipientsRefused, SMTPDataError, SMTPException
 import re
 import socket
+import requests
 
 
 def send_mail(smtphost="localhost", smtpport="25", recipient="recipient@hypernode.com", sender="sender@hypernode.com", subject="testsubject", body="testbody"):
@@ -81,3 +82,26 @@ def compose_mail(recipient, sender, subject, body):
     msg["to"] = recipient
 
     return msg
+
+
+def raise_sos(message=""):
+    config = get_deployment_config()
+    data = {'message': message}
+    resp = requests.post(config["sos_url"], data=data)
+
+    if resp.status_code == 200:
+        return True
+
+    return False
+
+
+# Copied from nodeconfig.common.get_config. No tests, waiting for
+# shared code
+def get_deployment_config():
+    filename = "/etc/hypernode/nodeconfig.json"
+    with open(filename, 'r') as fd:
+        content = fd.read()
+        try:
+            return json.loads(content)
+        except ValueError:
+            return {}

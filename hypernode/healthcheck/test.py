@@ -24,4 +24,4 @@ class TestCase(unittest.TestCase):
 
         patcher = mock.patch(topatch, themock)
         self.addCleanup(patcher.stop)
-        return patcher.start(), patcher
+        return patcher.start()
