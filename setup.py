@@ -3,7 +3,7 @@ from distutils.core import setup
 setup(
     name='hypernode-nodescripts',
     version='0.1',
-    packages=['hypernode.healthcheck'],
+    packages=['hypernode'],
     scripts=['bin/check_mailout'],
     url='https://github.com/hypernode/nodescripts.git',
     license='',
