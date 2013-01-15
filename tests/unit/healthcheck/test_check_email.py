@@ -121,6 +121,12 @@ class TestRaiseSOS(TestCase):
         assert get_deployment_config.called
         mock_post.assert_called_once_with('my_url', data=data)
 
+    def test_raise_sos_raises_keyerror_if_sos_url_not_found(self):
+        get_deployment_config = self.set_up_patch('hypernode.healthcheck.mailout.get_deployment_config')
+        get_deployment_config.return_value = {'noop': 'my_url'}
+
+        self.assertRaises(KeyError, raise_sos, "Help!")
+
     def test_raise_sos_returns_true_if_status_code_200(self):
         get_deployment_config = self.set_up_patch('hypernode.healthcheck.mailout.get_deployment_config')
         get_deployment_config.return_value = {'sos_url': 'my_url'}
@@ -142,8 +148,3 @@ class TestRaiseSOS(TestCase):
         ret = raise_sos("Help!")
 
         self.assertFalse(ret)
-
-
-class TestGetDeploymentConfig(TestCase):
-
-    pass
