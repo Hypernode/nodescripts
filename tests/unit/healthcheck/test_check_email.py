@@ -1,7 +1,8 @@
 from hypernode.healthcheck.test import TestCase
-from hypernode.healthcheck.mailout import send_mail, compose_mail, check_delivery, raise_sos
+from hypernode.healthcheck.mailout import send_mail, check_delivery, raise_sos
 from smtplib import SMTPConnectError, SMTPSenderRefused, SMTPRecipientsRefused, SMTPDataError
 import mock
+import socket
 
 
 class TestSendmail(TestCase):
@@ -33,6 +34,11 @@ class TestSendmail(TestCase):
         with self.assertRaises(SMTPConnectError):
             send_mail(**self.send_mail_arguments)
 
+        # also catch socket.error
+        self.msc.side_effect = socket.error()
+        with self.assertRaises(SMTPConnectError):
+            send_mail(**self.send_mail_arguments)
+
     def test_send_mail_raises_exception_when_setting_sender_fails(self):
         self.mock_smtp.mail.return_value = (0, "Sender Refused")
         with self.assertRaises(SMTPSenderRefused):
@@ -52,14 +58,6 @@ class TestSendmail(TestCase):
         self.mock_smtp.data.return_value = (250, "not ok")
         with self.assertRaises(ValueError):
             send_mail(**self.send_mail_arguments)
-
-    def test_send_mail_composes_email(self):
-        compose = self.set_up_patch("hypernode.healthcheck.mailout.compose_mail")
-        send_mail(**self.send_mail_arguments)
-        compose.assert_called_once_with(self.send_mail_arguments["recipient"],
-                                        self.send_mail_arguments["sender"],
-                                        self.send_mail_arguments["subject"],
-                                        self.send_mail_arguments["body"])
 
     def test_send_mail_returns_queue_id(self):
         queueid = send_mail(**self.send_mail_arguments)
@@ -90,21 +88,6 @@ class TestCheckDelivery(TestCase):
     def test_check_delivery_returns_true_when_delivery_is_seen(self):
         self.assertTrue(check_delivery("E8313500567", self.sample_log.split("\n")))
         pass
-
-
-class TestComposeMail(TestCase):
-
-    def test_compose_mail_requires_recipient_subject_and_body(self):
-        # succeeds
-        compose_mail("recipient@hypernode.com", "sender@hypernode.com", "subject", "body")
-
-    def test_compose_mail_returns_mimetext_with_subject_from_and_to_set(self):
-        msg = compose_mail("recipient", "sender", "subject", "body")
-        msg.as_string()
-
-        self.assertEquals(msg["Subject"], "subject")
-        self.assertEquals(msg["From"], "sender")
-        self.assertEquals(msg["To"], "recipient")
 
 
 class TestRaiseSOS(TestCase):

@@ -1,6 +1,6 @@
 import smtplib
 from email.mime.text import MIMEText
-from smtplib import SMTPSenderRefused, SMTPRecipientsRefused, SMTPDataError, SMTPException
+from smtplib import SMTPSenderRefused, SMTPRecipientsRefused, SMTPDataError, SMTPConnectError, SMTPException
 import re
 import socket
 import requests
@@ -12,9 +12,7 @@ def send_mail(smtphost="localhost", smtpport="25", recipient="recipient@hypernod
     try:
         smtp = smtplib.SMTP(smtphost, smtpport)
     except socket.error as e:
-        raise SMTPException("Could not connect to mailserver at %s:%s: %s" % (smtphost, smtpport, e))
-
-    msg = compose_mail(recipient, sender, subject, body)
+        raise SMTPConnectError(smtphost, smtpport)
 
     """
     Take code from smtplib.sendmail. We need the send return code.
@@ -61,28 +59,6 @@ def check_delivery(messageid, loglines):
             return True
 
     return False
-
-
-def compose_mail(recipient, sender, subject, body):
-    if recipient is None:
-        raise ValueError("recipient cannot be None")
-
-    if sender is None:
-        raise ValueError("sender cannot be None")
-
-    if subject is None:
-        raise ValueError("subject cannot be None")
-
-    if body is None:
-        raise ValueError("body cannot be None")
-
-    msg = MIMEText(body)
-
-    msg["subject"] = subject
-    msg["from"] = sender
-    msg["to"] = recipient
-
-    return msg
 
 
 def raise_sos(message=""):
