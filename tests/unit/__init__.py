@@ -12,3 +12,6 @@ class BaseTestCase(unittest.TestCase):
         patcher = mock.patch(topatch, themock)
         self.addCleanup(patcher.stop)
         return patcher.start()
+
+    # create alias
+    set_up_patch = setUpPatch
