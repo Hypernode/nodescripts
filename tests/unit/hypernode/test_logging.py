@@ -14,7 +14,7 @@ class TestLogging(tests.unit.BaseTestCase):
 
         logger = hypernode.log.getLogger()
         self.assertEqual("Logger", logger.__class__.__name__)
-        self.assertEqual(logger.name, "hypernode.log")
+        self.assertEqual(logger.name, "hypernode")
 
     def test_attach_console_handler_attaches_streamhandler(self):
         logger = mock.Mock()

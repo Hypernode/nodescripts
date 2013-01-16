@@ -62,7 +62,7 @@ def check_delivery(messageid, loglines):
 
 
 def raise_sos(message=""):
-    logger = hypernode.log.getLogger()
+    logger = hypernode.log.getLogger(__name__)
 
     try:
         config = hypernode.nodeconfig.common.get_config("/etc/hypernode/nodeconfig.json")
