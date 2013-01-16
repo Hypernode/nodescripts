@@ -2,7 +2,7 @@
 
 import sys
 import os
-import hypernode.healthcheck.log
+import hypernode.logging
 import hypernode.healthcheck.mailout as mailout
 import time
 from hypernode.healthcheck.mailout import SMTPException

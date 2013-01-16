@@ -2,12 +2,13 @@
 
 import subprocess
 import hypernode.nodeconfig
+import hypernode.log
 from hypernode.nodeconfig import common
 
 
 def apply_config(config):
 
-    logger = hypernode.nodeconfig.getLogger(__name__)
+    logger = hypernode.log.getLogger(__name__)
 
     common.check_vars(config, ["hostnames", "app_name"])
 

@@ -1,5 +1,4 @@
 import smtplib
-from email.mime.text import MIMEText
 from smtplib import SMTPSenderRefused, SMTPRecipientsRefused, SMTPDataError, SMTPConnectError, SMTPException
 import re
 import socket
