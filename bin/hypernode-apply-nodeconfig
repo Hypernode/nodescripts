@@ -28,13 +28,13 @@ nodeconfigpath = "/etc/hypernode/nodeconfig.json"
 ##
 # Logging
 ##
-logger = hypernode.nodeconfig.getLogger()
-logbuffer = hypernode.nodeconfig.attachBufferHandler(logger)
+logger = hypernode.log.getLogger()
+logbuffer = hypernode.log.attachBufferHandler(logger)
 
 if sys.stdout.isatty():
-    hypernode.nodeconfig.attachConsoleHandler(logger)
+    hypernode.log.attachConsoleHandler(logger)
 else:
-    hypernode.nodeconfig.attachSyslogHandler(logger)
+    hypernode.log.attachSyslogHandler(logger)
 
 ###
 # Fetch nodeconfig

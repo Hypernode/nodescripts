@@ -2,7 +2,7 @@
 
 import sys
 import os
-import hypernode.logging
+import hypernode.log
 import hypernode.healthcheck.mailout as mailout
 import time
 from hypernode.healthcheck.mailout import SMTPException
@@ -11,6 +11,17 @@ recipient = "testrecipient@hypernode.com"
 sender = "testsender@hypernode.com"
 smtphost = "localhost"
 smtpport = "25"
+
+##
+# Logging
+##
+logger = hypernode.log.getLogger()
+logbuffer = hypernode.log.attachBufferHandler(logger)
+
+if sys.stdout.isatty():
+    hypernode.log.attachConsoleHandler(logger)
+else:
+    hypernode.log.attachSyslogHandler(logger)
 
 """
 
@@ -29,9 +40,6 @@ See if the mail is delivered
         Call the SOS server to tell it delivery failed
         Give the error in the callback
 """
-
-logger = hypernode.healthcheck.log.getLogger("hypernode.healthcheck.mailout")
-
 with open("/var/log/mail.log") as maillog:
     # First, seek to the end of the file, so we get only new entries.
     # This to make sure that we do not process a mail log of 10GB :)
@@ -42,7 +50,6 @@ with open("/var/log/mail.log") as maillog:
         messageid = mailout.send_mail(smtphost=smtphost, smtpport=smtpport, recipient=recipient, sender=sender)
     except SMTPException as e:
         logger.critical("Could not send test email to %s through %s:%s" % (recipient, smtphost, smtpport))
-        logger.critical(e)
         if mailout.raise_sos(message="There seems to be a problem with maildelivery on this instance"):
             logger.info("Successfully notified staff")
         else:

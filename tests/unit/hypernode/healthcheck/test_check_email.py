@@ -1,11 +1,11 @@
-from hypernode.healthcheck.test import TestCase
+import tests.unit
 from hypernode.healthcheck.mailout import send_mail, check_delivery, raise_sos
 from smtplib import SMTPConnectError, SMTPSenderRefused, SMTPRecipientsRefused, SMTPDataError
 import mock
 import socket
 
 
-class TestSendmail(TestCase):
+class TestSendmail(tests.unit.BaseTestCase):
 
     def setUp(self):
         self.mock_smtp = mock.Mock()
@@ -64,7 +64,7 @@ class TestSendmail(TestCase):
         self.assertEqual(queueid, "8E220500567")
 
 
-class TestCheckDelivery(TestCase):
+class TestCheckDelivery(tests.unit.BaseTestCase):
 
     def setUp(self):
         self.sample_log = ("\n"
@@ -90,7 +90,10 @@ class TestCheckDelivery(TestCase):
         pass
 
 
-class TestRaiseSOS(TestCase):
+class TestRaiseSOS(tests.unit.BaseTestCase):
+
+    def setUp(self):
+        self.logger = self.set_up_patch('hypernode.log.getLogger')
 
     def test_raise_sos_posts_to_callback_url(self):
         get_deployment_config = self.set_up_patch('hypernode.nodeconfig.common.get_config')
@@ -130,4 +133,13 @@ class TestRaiseSOS(TestCase):
 
         ret = raise_sos("Help!")
 
+        self.assertFalse(ret)
+
+    def test_raise_sos_catches_ioexception_and_logs_and_returns_false(self):
+        mock_getdepconf = self.set_up_patch('hypernode.nodeconfig.common.get_config')
+        mock_getdepconf.side_effect = IOError()
+
+        ret = raise_sos("Henk!")
+
+        self.logger.return_value.critical.assert_called_once()
         self.assertFalse(ret)

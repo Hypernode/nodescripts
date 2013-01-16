@@ -4,6 +4,7 @@ import re
 import socket
 import requests
 import hypernode.nodeconfig.common
+import hypernode.log
 
 
 def send_mail(smtphost="localhost", smtpport="25", recipient="recipient@hypernode.com", sender="sender@hypernode.com", subject="testsubject", body="testbody"):
@@ -61,7 +62,14 @@ def check_delivery(messageid, loglines):
 
 
 def raise_sos(message=""):
-    config = hypernode.nodeconfig.common.get_config("/etc/hypernode/nodeconfig.json")
+    logger = hypernode.log.getLogger()
+
+    try:
+        config = hypernode.nodeconfig.common.get_config("/etc/hypernode/nodeconfig.json")
+    except IOError as e:
+        logger.critical("Could not open nodeconfig.json: %s" % e)
+        return False
+
     data = {'message': message}
     resp = requests.post(config["sos_url"], data=data)
 
