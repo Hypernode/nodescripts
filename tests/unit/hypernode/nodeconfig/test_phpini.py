@@ -30,15 +30,18 @@ class TestPHPIni(tests.unit.BaseTestCase):
 
     def test_apply_config_writes_template_to_hypernode_ini(self):
         phpini.apply_config(self.fixture)
-        self.mock_writefile.assert_called_once_with("/etc/php5/conf.d/99.hypernode.ini",
+        self.mock_writefile.assert_called_once_with("/etc/php5/mods-available/hypernode.ini",
                                                     self.mock_template_contents)
         self.mock_filltemplate.assert_called_once_with("/etc/hypernode/templates/20.phpini",
                                                        {"options": {"apc.stat": 1},
                                                         "extensions": {"ioncube": True}})
 
-    def test_apply_config_restarts_phpfpm(self):
+    def test_apply_config_enables_hypernode_ini_restarts_phpfpm(self):
         phpini.apply_config(self.fixture)
-        self.mock_call.assert_called_once_with(["service", "php5-fpm", "restart"])
+        self.mock_call.assert_has_calls([
+            mock.call(["php5enmod", "hypernode/99"]),
+            mock.call(["service", "php5-fpm", "restart"])
+        ])
 
     def test_apply_config_returns_zero(self):
         ret = phpini.apply_config(self.fixture)
