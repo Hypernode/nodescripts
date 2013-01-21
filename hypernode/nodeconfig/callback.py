@@ -25,7 +25,7 @@ def call_success(config):
     r = requests.post(config["callback_url"], data={"applied_hash": hash}, headers=headers, verify=True)
 
     if r.status_code == 200:
-        logger.debug("Callback was received")
+        logger.info("Callback was received")
     else:
         logger.error("Callback was unsuccessful: %s" % r.status_code)
         logger.error(r.text)
