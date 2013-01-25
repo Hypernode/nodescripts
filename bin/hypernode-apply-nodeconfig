@@ -2,6 +2,7 @@
 
 import sys
 import os.path
+import traceback
 
 #pathprefix = os.path.normpath(os.path.dirname(__file__))
 #pathprefix = os.path.realpath(pathprefix + "/../lib/hypernode")
@@ -59,7 +60,7 @@ for module in runparts:
     except Exception as e:
         modulelogger = hypernode.log.getLogger(module.__name__)
         modulelogger.error("Could not execute part %s" % module.__name__)
-        modulelogger.error(e.message)
+        modulelogger.error(traceback.format_exc())
         try:
             hypernode.nodeconfig.callback.call_error(config, module, e, logbuffer.formatBuffer())
         except Exception as e:
