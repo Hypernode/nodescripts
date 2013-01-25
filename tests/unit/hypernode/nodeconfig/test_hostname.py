@@ -47,7 +47,3 @@ class TestSetup(tests.unit.BaseTestCase):
     def test_apply_config_restarts_syslog(self):
         hostname.apply_config(self.fixture)
         self.mock_call.assert_any_call(["service", "rsyslog", "restart"])
-
-    def test_apply_config_returns_zero(self):
-        ret = hostname.apply_config(self.fixture)
-        self.assertEqual(ret, 0)

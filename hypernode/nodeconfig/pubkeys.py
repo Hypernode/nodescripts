@@ -1,8 +1,10 @@
-#!/usr/bin/env python
-
 import os
+import logging
 
 from hypernode.nodeconfig import common
+
+
+logger = logging.getLogger(__name__)
 
 PREAMBLE = "#\n# This file is generated. Please update your public keys on the Hyperpanel\n#\n\n"
 DOTSSH = "/home/user/.ssh"
@@ -15,9 +17,11 @@ def apply_config(config):
 
     # do not handle any errors here
     if not os.path.isdir(DOTSSH):
+        logging.info("Creating .ssh directory")
         os.mkdir(DOTSSH, 0755)
 
+    logging.info("Setting .ssh dir owner")
     os.chown(DOTSSH, 1000, 1000)
-    common.write_file(AUTHKEYS, contents, umask=0022)
 
-    return 0
+    logging.info("Write authorized_keys file")
+    common.write_file(AUTHKEYS, contents, umask=0022)

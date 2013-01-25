@@ -1,11 +1,13 @@
-#!/usr/bin/env python
-
 import os
 import tempfile
 import subprocess
 import errno
+import logging
 
 from hypernode.nodeconfig import common
+
+
+logger = logging.getLogger(__name__)
 
 
 def apply_config(config):
@@ -29,30 +31,35 @@ def apply_config(config):
     common.check_vars(config, ["app_name"])
 
     if "ssl_common_name" in config and "ssl_body" in config and "ssl_certificate" in config and "ssl_key_chain" in config:
-        # Configure SSL
+        logger.debug("Configuring SSL")
 
-        if not verify_ssl(config["ssl_certificate"], config["ssl_body"], config["ssl_key_chain"]):
-            return 1
-        else:
-            common.write_file("/etc/ssl/private/hypernode.ca",
-                              config["ssl_key_chain"],
-                              umask=0077)
-            common.write_file("/etc/ssl/private/hypernode.crt",
-                              "%s\n\n%s" % (config["ssl_certificate"], config["ssl_body"]),
-                              umask=0077)
-            common.write_file("/etc/apache2/sites-enabled/default-ssl",
-                              common.fill_template("/etc/hypernode/templates/05.ssl.default-ssl-vhost",
-                                                   vars={'app_name': config['app_name'],
-                                                         'servername': config['ssl_common_name']}))
+        logger.debug("Verifying SSL key and certificate")
+        verify_ssl(config["ssl_certificate"], config["ssl_body"], config["ssl_key_chain"])
 
-            subprocess.call(["service", "apache2", "restart"])
-            return 0
+        logger.info("Writing /etc/ssl/private/hypernode.ca")
+        common.write_file("/etc/ssl/private/hypernode.ca",
+                          config["ssl_key_chain"],
+                          umask=0077)
+        logger.info("Writing /etc/ssl/private/hypernode.crt")
+        common.write_file("/etc/ssl/private/hypernode.crt",
+                          "%s\n\n%s" % (config["ssl_certificate"], config["ssl_body"]),
+                          umask=0077)
+        logger.info("Writing /etc/ssl/private/hypernode.ca")
+        common.write_file("/etc/apache2/sites-enabled/default-ssl",
+                          common.fill_template("/etc/hypernode/templates/05.ssl.default-ssl-vhost",
+                                               vars={'app_name': config['app_name'],
+                                                     'servername': config['ssl_common_name']}))
+
+        logger.info("Restarting apache2")
+        subprocess.call(["service", "apache2", "restart"])
+        return
 
     elif "ssl_common_name" not in config and "ssl_body" not in config and "ssl_certificate" not in config and "ssl_key_chain" not in config:
+        logger.debug("Disabling SSL")
         disable_ssl()
-        return 0
+        return
     else:
-        raise Exception
+        raise RuntimeError("Incomplete SSL parameters in configuration")
 
 
 def verify_ssl(crt, key, ca):
@@ -64,26 +71,20 @@ def verify_ssl(crt, key, ca):
         fd_crt.flush()
         fd_ca.flush()
 
-        try:
-            verify_ssl_pem(fd_crt.name)
-            verify_ssl_ca(fd_crt.name, fd_ca.name)
-        except subprocess.CalledProcessError:
-            return False
-        except Exception:
-            return False
-
-    return True
+        # If verification fails, an exception will be raised
+        verify_ssl_pem(fd_crt.name)
+        verify_ssl_ca(fd_crt.name, fd_ca.name)
 
 
 def verify_ssl_pem(crt_file):
-
+    # check_output raises CalledProcessError if exit code is != 0
     subprocess.check_output(["/usr/bin/openssl", "x509",
                              "-in", crt_file, "-noout"],
                             shell=False, stderr=subprocess.STDOUT)
 
 
 def verify_ssl_ca(crt_file, ca_file):
-
+    # check_output raises CalledProcessError if exit code is != 0
     subprocess.check_output(["/usr/bin/openssl", "verify",
                              "-CAfile", ca_file, crt_file],
                             shell=False, stderr=subprocess.STDOUT)
@@ -94,6 +95,7 @@ def disable_ssl():
 
     for f in ["/etc/ssl/private/hypernode.crt", "/etc/ssl/private/hypernode.ca", "/etc/apache2/sites-enabled/default-ssl"]:
         try:
+            logger.info("Removing %s", f)
             os.unlink(f)
             # if any of the files existed (and the unlink succeeded), we
             # need to restart apache after this
@@ -105,4 +107,5 @@ def disable_ssl():
                 raise
 
     if restart_apache:
+        logging.info("Restarting apache2")
         subprocess.call(["service", "apache2", "restart"])

@@ -42,7 +42,3 @@ class TestPHPIni(tests.unit.BaseTestCase):
             mock.call(["php5enmod", "hypernode/99"]),
             mock.call(["service", "php5-fpm", "restart"])
         ])
-
-    def test_apply_config_returns_zero(self):
-        ret = phpini.apply_config(self.fixture)
-        self.assertEqual(ret, 0)

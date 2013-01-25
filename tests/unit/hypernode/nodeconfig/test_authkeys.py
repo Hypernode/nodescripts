@@ -49,7 +49,3 @@ class TestSetup(tests.unit.BaseTestCase):
         pubkeys.apply_config(self.fixture)
         contents = pubkeys.PREAMBLE + "ssh-rsa henk\n\nssh-rsa ingrid\n\n"
         self.mock_writefile.assert_called_once_with(pubkeys.AUTHKEYS, contents, umask=0022)
-
-    def test_apply_config_returns_zero(self):
-        ret = pubkeys.apply_config(self.fixture)
-        self.assertEquals(ret, 0)

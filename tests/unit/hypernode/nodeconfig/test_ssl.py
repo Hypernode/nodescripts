@@ -70,19 +70,17 @@ class TestSSLConfig(tests.unit.BaseTestCase):
 
     def test_apply_config_verifies_ssl_certificate(self):
         mock_verify = self.setUpPatch('hypernode.nodeconfig.sslcerts.verify_ssl', mock.Mock(return_value=True))
-        ret = ssl.apply_config(self.fixture)
+        ssl.apply_config(self.fixture)
         mock_verify.assert_called_once_with(self.fixture['ssl_certificate'],
                                             self.fixture['ssl_body'],
                                             self.fixture['ssl_key_chain'])
-        self.assertEquals(0, ret)
 
-    def test_apply_config_returns_1_when_ssl_certificate_is_invalid(self):
-        mock_verify = self.setUpPatch('hypernode.nodeconfig.sslcerts.verify_ssl', mock.Mock(return_value=False))
-        ret = ssl.apply_config(self.fixture)
+    def test_apply_config_raises_exception_when_ssl_certificate_is_invalid(self):
+        mock_verify = self.setUpPatch('hypernode.nodeconfig.sslcerts.verify_ssl', mock.Mock(side_effect=SSLTestException()))
+        self.assertRaises(Exception, ssl.apply_config, self.fixture)
         mock_verify.assert_called_once_with(self.fixture['ssl_certificate'],
                                             self.fixture['ssl_body'],
                                             self.fixture['ssl_key_chain'])
-        self.assertEquals(1, ret)
 
     def test_apply_config_writes_certificate_if_valid(self):
         self.setUpPatch('hypernode.nodeconfig.sslcerts.verify_ssl', mock.Mock(return_value=True))
@@ -92,7 +90,6 @@ class TestSSLConfig(tests.unit.BaseTestCase):
         self.mock_writefile.assert_any_call("/etc/ssl/private/hypernode.crt", "%s\n\n%s" %
                                             (self.fixture['ssl_certificate'],
                                              self.fixture['ssl_body']), umask=0077)
-        self.assertEquals(0, ret)
 
     def test_apply_config_restarts_apache_if_certificate_is_valid(self):
         self.setUpPatch('hypernode.nodeconfig.sslcerts.verify_ssl')
@@ -110,44 +107,32 @@ class TestSSLConfig(tests.unit.BaseTestCase):
         fd.write.assert_any_call('%s\n\n%s' % ('my_key', 'my_crt'))
         fd.write.assert_any_call('my_ca')
 
-    def test_verify_ssl_catches_exception_from_verify_ssl_pem_and_returns_false(self):
+    def test_verify_ssl_raises_exception_when_pem_verification_fails(self):
         mock_verifypem = self.setUpPatch('hypernode.nodeconfig.sslcerts.verify_ssl_pem', mock.Mock(side_effect=SSLTestException))
         mock_verifyca = self.setUpPatch('hypernode.nodeconfig.sslcerts.verify_ssl_ca', mock.Mock())
 
-        ret = ssl.verify_ssl('my_crt', 'my_key', 'my_ca')
+        self.assertRaises(Exception, ssl.verify_ssl, 'my_crt', 'my_key', 'my_ca')
 
         assert mock_verifypem.called
         assert not mock_verifyca.called
-        self.assertEqual(ret, False)
 
-    def test_verify_ssl_catches_exception_from_verify_ssl_ca_and_returns_false(self):
+    def test_verify_ssl_raises_exception_when_ca_verification_fails(self):
         verify_ssl_pem = self.setUpPatch('hypernode.nodeconfig.sslcerts.verify_ssl_pem')
         verify_ssl_ca = self.setUpPatch('hypernode.nodeconfig.sslcerts.verify_ssl_ca', mock.Mock(side_effect=SSLTestException))
 
-        ret = ssl.verify_ssl('my_crt', 'my_key', 'my_ca')
+        self.assertRaises(Exception, ssl.verify_ssl, 'my_crt', 'my_key', 'my_ca')
 
         assert verify_ssl_pem.called
         assert verify_ssl_ca.called
-        self.assertEqual(ret, False)
 
     def test_verify_ssl_returns_true_if_verification_succeeds(self):
         verify_ssl_pem = self.setUpPatch('hypernode.nodeconfig.sslcerts.verify_ssl_pem')
         verify_ssl_ca = self.setUpPatch('hypernode.nodeconfig.sslcerts.verify_ssl_ca')
 
-        ret = ssl.verify_ssl('my_crt', 'my_key', 'my_ca')
+        ssl.verify_ssl('my_crt', 'my_key', 'my_ca')
 
         assert verify_ssl_pem.called
         assert verify_ssl_ca.called
-        self.assertEqual(ret, True)
-
-    def test_verify_ssl_does_not_verify_ca_if_pem_invalid(self):
-        mock_verifypem = self.setUpPatch('hypernode.nodeconfig.sslcerts.verify_ssl_pem', mock.Mock(side_effect=SSLTestException))
-        mock_verifyca = self.setUpPatch('hypernode.nodeconfig.sslcerts.verify_ssl_ca', mock.Mock())
-
-        ssl.verify_ssl('my_crt', 'my_key', 'my_ca')
-
-        assert mock_verifypem.called
-        assert not mock_verifyca.called
 
     def test_verify_ssl_pem_calls_openssl_with_filename(self):
         ssl.verify_ssl_pem("my_crt_file")

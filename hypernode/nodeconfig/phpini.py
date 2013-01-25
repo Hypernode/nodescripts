@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import subprocess
 import logging
 
@@ -36,9 +34,8 @@ def apply_config(config):
                                            {"options": options,
                                             "extensions": extensions}))
 
+    logger.info("Enabling hypernode.ini using php5enmod")
     subprocess.call(["php5enmod", "hypernode/99"])
 
     logger.info("Restarting PHP5-FPM daemon")
     subprocess.call(["service", "php5-fpm", "restart"])
-
-    return 0
