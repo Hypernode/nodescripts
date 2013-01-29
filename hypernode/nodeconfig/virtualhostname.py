@@ -17,4 +17,4 @@ def apply_config(config):
                                            {'hostnames': config["hostnames"]}))
 
     logger.info("Restarting apache2")
-    subprocess.call(["service", "apache2", "restart"])
+    subprocess.call(["service", "apache2", "reload"])

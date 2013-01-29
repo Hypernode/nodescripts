@@ -38,4 +38,4 @@ class TestSetup(tests.unit.BaseTestCase):
 
     def test_apply_config_restarts_apache(self):
         vhost.apply_config(self.fixture)
-        self.mock_call.assert_called_once_with(["service", "apache2", "restart"])
+        self.mock_call.assert_called_once_with(["service", "apache2", "reload"])
