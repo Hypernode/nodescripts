@@ -1,0 +1,60 @@
+#!/bin/sh
+
+tag=$(basename $0)
+
+dolog() {
+	logger -s -t $tag "$1"
+}
+
+restart() {
+	dolog "restarting $1"
+	service $1 restart
+}
+
+disk=/dev/xvdh
+part=${disk}1
+
+# Wait for the appvol disk to appear
+while [ ! -e "$disk" ]
+do
+	dolog "waiting for $disk to attach"
+	sleep 2
+done
+
+dolog "$disk has appeared"
+
+if [ -e "$part" ]
+then
+	dolog "$part exists, I assume this is an old-style appvol, without LVM"
+	dolog "mounting $part on /home/user"
+	mount "$part" /home/user || exit 1
+else
+	dolog "$part does not exist, I assume this is a new-style appvol, with LVM"
+	
+	if pvscan -s | grep -q "$disk"
+	then
+		vgchange -a y hypernode
+		mount /dev/mapper/hypernode-appvol /home/user || exit 1
+	else
+		dolog "$disk does not appear to be a PV"
+		exit 1
+	fi
+fi
+
+dolog "mounting /home/user/crontabs/ on /var/spool/cron/crontabs/"
+mount -o bind /home/user/crontabs/ /var/spool/cron/crontabs/
+
+# Restart services
+restart udev
+restart cron
+restart apache2
+restart php5-fpm
+
+if [ -e /etc/hypernode/nodeconfig.json ]
+then
+	dolog "Applying Hypernode config from /etc/hypernode/nodeconfig.json"
+	/usr/local/bin/hypernode-apply-nodeconfig
+else
+	dolog "/etc/hypernode/nodeconfig.json does not exist"
+fi
+

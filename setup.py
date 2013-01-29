@@ -4,7 +4,7 @@ setup(
     name='hypernode-nodescripts',
     version='0.1',
     packages=['hypernode', 'hypernode.healthcheck', 'hypernode.nodeconfig'],
-    scripts=['bin/check_mailout', 'bin/hypernode-apply-nodeconfig'],
+    scripts=['bin/check_mailout', 'bin/hypernode-apply-nodeconfig', 'bin/hypernode-wait-for-appvol'],
     url='https://github.com/hypernode/nodescripts.git',
     license='',
     author='Allard Hoeve',
