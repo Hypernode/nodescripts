@@ -1,12 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 
 import sys
-import os.path
 import traceback
-
-#pathprefix = os.path.normpath(os.path.dirname(__file__))
-#pathprefix = os.path.realpath(pathprefix + "/../lib/hypernode")
-#sys.path.append(pathprefix)
 
 # General inclusions
 import hypernode.log
@@ -25,7 +20,7 @@ import hypernode.nodeconfig.virtualhostname
 ##
 # Configuration
 ##
-runparts = [hypernode.nodeconfig.cfninit, hypernode.nodeconfig.hostname, hypernode.nodeconfig.phpini, hypernode.nodeconfig.pubkeys, hypernode.nodeconfig.sslcerts, hypernode.nodeconfig.virtualhostname]
+runparts = [hypernode.nodeconfig.hostname, hypernode.nodeconfig.phpini, hypernode.nodeconfig.pubkeys, hypernode.nodeconfig.sslcerts, hypernode.nodeconfig.virtualhostname]
 nodeconfigpath = "/etc/hypernode/nodeconfig.json"
 
 ##
@@ -47,6 +42,13 @@ logger.info("Applying nodeconfig to node")
 try:
     logger.debug("Fetching nodeconfig from %s" % nodeconfigpath)
     config = hypernode.nodeconfig.common.get_config(nodeconfigpath)
+
+    logger.info("Running cfn-init")
+    hypernode.nodeconfig.cfninit.apply_config(config)
+
+    logger.debug("Fetching possibly updated config from %s" % nodeconfigpath)
+    config = hypernode.nodeconfig.common.get_config(nodeconfigpath)
+
 except Exception as e:
     logger.critical("Could not open nodeconfig in %s" % nodeconfigpath)
     logger.critical(e)
