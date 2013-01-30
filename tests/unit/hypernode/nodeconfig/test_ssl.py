@@ -166,15 +166,17 @@ class TestSSLConfig(tests.unit.BaseTestCase):
                 mock.call("/etc/ssl/private/hypernode.ca"),
                 mock.call("/etc/apache2/sites-enabled/default-ssl")])
 
-    def test_disable_ssl_raises_no_exception_if_file_does_not_exist(self):
-        with mock.patch('os.unlink', mock.Mock(side_effect=[OSError(2, ""), 1, OSError(2, "")])) as mock_unlink:
-            ssl.disable_ssl()
-            self.assertIs(mock_unlink.call_count, 3)
-
     def test_disable_ssl_restarts_apache_if_at_least_one_file_is_deleted(self):
         with mock.patch('os.unlink', mock.Mock(side_effect=[1, OSError(2, ""), OSError(2, "")])):
             ssl.disable_ssl()
             self.mock_call.assert_called_once_with(["service", "apache2", "restart"])
+
+    def test_disable_ssl_catches_file_does_not_exist_exception_but_no_other_exception(self):
+        with mock.patch('os.unlink', mock.Mock(side_effect=OSError(2, ""))):
+            ssl.disable_ssl()
+
+        with mock.patch('os.unlink', mock.Mock(side_effect=OSError(3, ""))):
+            self.assertRaises(OSError, ssl.disable_ssl)
 
 
 class SSLTestException(Exception):

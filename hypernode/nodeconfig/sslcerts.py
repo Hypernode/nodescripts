@@ -101,9 +101,13 @@ def disable_ssl():
             # need to restart apache after this
             restart_apache = True
         except OSError as e:
-            # We expect this to happen, as the files may not exist. This
-            # will yield errno 2 (No such file or directory)
-            if e.errno != errno.ENOENT:
+            # If we catch an error, check if it is errno 2 (No such file or directory).
+            # This is a case we expect to happen, as the files may not exist.
+            # - If the errno IS 2, then do nothing
+            # - If the errno is NOT 2, then reraise the error
+            if e.errno == errno.ENOENT:
+                pass
+            else:
                 raise
 
     if restart_apache:
