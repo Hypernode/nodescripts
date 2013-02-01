@@ -15,12 +15,11 @@ import hypernode.nodeconfig.hostname
 import hypernode.nodeconfig.phpini
 import hypernode.nodeconfig.pubkeys
 import hypernode.nodeconfig.sslcerts
-import hypernode.nodeconfig.virtualhostname
 
 ##
 # Configuration
 ##
-runparts = [hypernode.nodeconfig.hostname, hypernode.nodeconfig.phpini, hypernode.nodeconfig.pubkeys, hypernode.nodeconfig.sslcerts, hypernode.nodeconfig.virtualhostname]
+runparts = [hypernode.nodeconfig.hostname, hypernode.nodeconfig.phpini, hypernode.nodeconfig.pubkeys, hypernode.nodeconfig.sslcerts]
 nodeconfigpath = "/etc/hypernode/nodeconfig.json"
 
 ##
