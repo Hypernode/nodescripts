@@ -9,6 +9,9 @@ from hypernode.nodeconfig import common
 
 logger = logging.getLogger(__name__)
 
+CRTPATH = '/etc/ssl/private/hypernode.crt'
+CAPATH = '/etc/ssl/private/hypernode.ca'
+
 
 def apply_config(config):
 
@@ -36,19 +39,21 @@ def apply_config(config):
         logger.debug("Verifying SSL key and certificate")
         verify_ssl(config["ssl_certificate"], config["ssl_body"], config["ssl_key_chain"])
 
-        logger.info("Writing /etc/ssl/private/hypernode.ca")
-        common.write_file("/etc/ssl/private/hypernode.ca",
+        logger.info("Writing %s", CAPATH)
+        common.write_file(CAPATH,
                           config["ssl_key_chain"],
                           umask=0077)
-        logger.info("Writing /etc/ssl/private/hypernode.crt")
-        common.write_file("/etc/ssl/private/hypernode.crt",
+        logger.info("Writing %s", CRTPATH)
+        common.write_file(CRTPATH,
                           "%s\n\n%s" % (config["ssl_certificate"], config["ssl_body"]),
                           umask=0077)
-        logger.info("Writing /etc/ssl/private/hypernode.ca")
+        logger.info("Writing /etc/apache2/sites-enabled/default-ssl")
         common.write_file("/etc/apache2/sites-enabled/default-ssl",
                           common.fill_template("/etc/hypernode/templates/05.ssl.default-ssl-vhost",
                                                vars={'app_name': config['app_name'],
-                                                     'servername': config['ssl_common_name']}))
+                                                     'servername': config['ssl_common_name'],
+                                                     'capath': CAPATH,
+                                                     'crtpath': CRTPATH}))
 
         logger.info("Restarting apache2")
         subprocess.call(["service", "apache2", "restart"])
