@@ -39,21 +39,27 @@ def apply_config(config):
         logger.debug("Verifying SSL key and certificate")
         verify_ssl(config["ssl_certificate"], config["ssl_body"], config["ssl_key_chain"])
 
-        logger.info("Writing %s", CAPATH)
-        common.write_file(CAPATH,
-                          config["ssl_key_chain"],
-                          umask=0077)
+        template_vars = {'app_name': config['app_name'],
+                         'servername': config['ssl_common_name'],
+                         'crtpath': CRTPATH}
+
+        if 'ssl_key_chain' in config and config['ssl_key_chain']:
+            logger.info("Writing %s", CAPATH)
+            common.write_file(CAPATH,
+                              config["ssl_key_chain"],
+                              umask=0077)
+
+            template_vars['capath'] = CAPATH
+
         logger.info("Writing %s", CRTPATH)
         common.write_file(CRTPATH,
                           "%s\n\n%s" % (config["ssl_certificate"], config["ssl_body"]),
                           umask=0077)
+
         logger.info("Writing /etc/apache2/sites-enabled/default-ssl")
         common.write_file("/etc/apache2/sites-enabled/default-ssl",
                           common.fill_template("/etc/hypernode/templates/05.ssl.default-ssl-vhost",
-                                               vars={'app_name': config['app_name'],
-                                                     'servername': config['ssl_common_name'],
-                                                     'capath': CAPATH,
-                                                     'crtpath': CRTPATH}))
+                                               vars=template_vars))
 
         logger.info("Restarting apache2")
         subprocess.call(["service", "apache2", "restart"])
@@ -72,13 +78,14 @@ def verify_ssl(crt, key, ca):
     # Write certificate to tempfiles, and test them
     with tempfile.NamedTemporaryFile() as fd_crt, tempfile.NamedTemporaryFile() as fd_ca:
         fd_crt.write("%s\n\n%s" % (key, crt))
-        fd_ca.write(ca)
         fd_crt.flush()
+        fd_ca.write(ca)
         fd_ca.flush()
 
         # If verification fails, an exception will be raised
         verify_ssl_pem(fd_crt.name)
-        verify_ssl_ca(fd_crt.name, fd_ca.name)
+        if ca:
+            verify_ssl_ca(fd_crt.name, fd_ca.name)
 
 
 def verify_ssl_pem(crt_file):
